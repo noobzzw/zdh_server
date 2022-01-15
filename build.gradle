@@ -5,7 +5,7 @@ wrapper {
     gradleVersion = '4.10.2' //version required
 }
 
-def scalaVersion = "2.11.12"
+def scalaVersion = '2.13.6'
 def sparkVersion = "2.4.4"
 ext {
     baseScala = scalaVersion.substring(0, scalaVersion.lastIndexOf("."))
@@ -20,7 +20,7 @@ sourceCompatibility = 1.8
 
 repositories {
     maven {
-        url 'http://maven.aliyun.com/nexus/content/groups/public/'
+        url 'https://maven.aliyun.com/nexus/content/groups/public/'
     }
 //    maven {
 //        url ' http://repo.hortonworks.com/content/groups/public/'
@@ -29,88 +29,88 @@ repositories {
 }
 
 dependencies {
-    testCompile "org.scalatest:scalatest_$baseScala:3.0.5"
-    testCompile "org.scala-lang.modules:scala-xml_$baseScala:1.1.0"
-    testCompile 'junit:junit:4.12'
-    testRuntime "org.pegdown:pegdown:1.4.2"
+    testImplementation "org.scalatest:scalatest_$baseScala:3.0.5"
+    testImplementation "org.scala-lang.modules:scala-xml_$baseScala:1.1.0"
+    testImplementation 'junit:junit:4.13.2'
+    testRuntimeOnly 'org.pegdown:pegdown:1.6.0'
 
-    compile files('libs/ojdbc6.jar')
-   // compile files('libs/hive-warehouse-connector-assembly-1.0.0.3.1.0.0-78.jar')
+    implementation files('libs/ojdbc6.jar')
+   // implementation files('libs/hive-warehouse-connector-assembly-1.0.0.3.1.0.0-78.jar')
 
-    compile "org.scala-lang:scala-library:$scalaVersion"
-    compile "org.scala-lang:scala-reflect:$scalaVersion"
+    implementation "org.scala-lang:scala-library:$scalaVersion"
+    implementation "org.scala-lang:scala-reflect:$scalaVersion"
 
     //spark
-    compile (group: 'org.apache.spark', name: "spark-core_$baseScala", version: "$sparkVersion"){
+    implementation (group: 'org.apache.spark', name: "spark-core_$baseScala", version: "$sparkVersion"){
         exclude(module: 'jackson-databind')
         exclude(module: 'jackson-module-scala_2.11')
     }
 
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.2'
-    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-scala_2.11', version: '2.9.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.2'
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-scala_2.11', version: '2.9.2'
 
-    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.47'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
+    implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.47'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'
 
-    compile(group: 'org.apache.spark', name: "spark-sql_$baseScala", version: "$sparkVersion") {
+    implementation(group: 'org.apache.spark', name: "spark-sql_$baseScala", version: "$sparkVersion") {
         exclude(module: 'commons-compiler')
     }
-    compile group: 'org.codehaus.janino', name: 'commons-compiler', version: '3.0.8'
+    implementation group: 'org.codehaus.janino', name: 'commons-compiler', version: '3.0.8'
 
-    compile group: 'org.apache.spark', name: "spark-hive-thriftserver_$baseScala", version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: "spark-hive-thriftserver_$baseScala", version: "$sparkVersion"
 
-    compile group: 'org.apache.spark', name: "spark-hive_$baseScala", version: "$sparkVersion"
-    compile group: 'org.apache.hive', name: 'hive-jdbc', version: '1.2.1'
-    compile (group: 'org.spark-project.hive', name: 'hive-jdbc', version: '1.2.1.spark2'){
+    implementation group: 'org.apache.spark', name: "spark-hive_$baseScala", version: "$sparkVersion"
+    implementation group: 'org.apache.hive', name: 'hive-jdbc', version: '1.2.1'
+    implementation (group: 'org.spark-project.hive', name: 'hive-jdbc', version: '1.2.1.spark2'){
         exclude(module: 'servelt-api')
     }
 
-    compile group: 'org.apache.spark', name: "spark-streaming_$baseScala", version: "$sparkVersion"
-    compile group: 'org.apache.spark', name: "spark-streaming-kafka-0-10_$baseScala", version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: "spark-streaming_$baseScala", version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: "spark-streaming-kafka-0-10_$baseScala", version: "$sparkVersion"
 
     // https://mvnrepository.com/artifact/org.apache.spark/spark-mllib
-    compile group: 'org.apache.spark', name: 'spark-mllib_2.11', version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: 'spark-mllib_2.11', version: "$sparkVersion"
 
 
     // https://mvnrepository.com/artifact/com.crealytics/spark-excel
-    compile group: 'com.crealytics', name: 'spark-excel_2.11', version: '0.13.1'
+    implementation group: 'com.crealytics', name: 'spark-excel_2.11', version: '0.13.1'
 
     // https://mvnrepository.com/artifact/com.databricks/spark-xml
-    compile group: 'com.databricks', name: 'spark-xml_2.11', version: '0.9.0'
+    implementation group: 'com.databricks', name: 'spark-xml_2.11', version: '0.9.0'
 
     // https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch-spark-20
-    compile group: 'org.elasticsearch', name: 'elasticsearch-spark-20_2.11', version: '7.6.0'
+    implementation group: 'org.elasticsearch', name: 'elasticsearch-spark-20_2.11', version: '7.6.0'
 
     // https://mvnrepository.com/artifact/org.mongodb.spark/mongo-spark-connector
-    compile group: 'org.mongodb.spark', name: 'mongo-spark-connector_2.11', version: '2.4.1'
+    implementation group: 'org.mongodb.spark', name: 'mongo-spark-connector_2.11', version: '2.4.1'
 
-    compile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.2'
+    implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.2'
 
     //netty
     //compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.46'
-    compile group: 'io.netty', name: 'netty-all', version: '4.1.23.Final'
+    implementation group: 'io.netty', name: 'netty-all', version: '4.1.23.Final'
 
     //json4s
-    compile group: 'org.json4s', name: "json4s-native_$baseScala", version: '3.5.4'
-    compile group: 'org.json4s', name: 'json4s-jackson_2.11', version: '3.5.4'
+    implementation group: 'org.json4s', name: "json4s-native_$baseScala", version: '3.5.4'
+    implementation group: 'org.json4s', name: 'json4s-jackson_2.11', version: '3.5.4'
     
     //config
-    compile group: 'com.typesafe', name: 'config', version: '1.3.2'
+    implementation group: 'com.typesafe', name: 'config', version: '1.3.2'
 
     //httpclient
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.5'
 
-    compile group: 'org.apache.commons', name: 'commons-email', version: '1.2'
+    implementation group: 'org.apache.commons', name: 'commons-email', version: '1.2'
 
     //poi
-    compile group: 'org.apache.poi', name: 'poi', version: '4.0.1'
-    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.0.1'
+    implementation group: 'org.apache.poi', name: 'poi', version: '4.0.1'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.0.1'
 
     //mysql
-    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.11'
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.11'
 
     //delta
-    compile group: 'io.delta', name: 'delta-core_2.11', version: '0.5.0'
+    implementation group: 'io.delta', name: 'delta-core_2.11', version: '0.5.0'
 
     //compile files('libs/shc-core-1.1.1-2.1-s_2.11.jar')
 
@@ -136,14 +136,14 @@ dependencies {
 //        exclude(module: 'hbase-common')
 //        exclude(module: 'hbase-protocol-shaded')
 //    }
-    compile (group: 'org.apache.hbase', name: 'hbase-client', version: '1.3.6'){
+    implementation (group: 'org.apache.hbase', name: 'hbase-client', version: '1.3.6'){
         exclude(module: 'hbase-common')
         exclude(module: 'hbase-protocol')
     }
     // https://mvnrepository.com/artifact/org.apache.hbase/hbase-common
-    compile group: 'org.apache.hbase', name: 'hbase-common', version: '1.3.6'
+    implementation group: 'org.apache.hbase', name: 'hbase-common', version: '1.3.6'
 
-    compile (group: 'org.apache.hbase', name: 'hbase-server', version: '1.3.6'){
+    implementation (group: 'org.apache.hbase', name: 'hbase-server', version: '1.3.6'){
         exclude(module: 'servlet-api-2.5')
         exclude(module: 'hbase-protocol')
         exclude(module: 'hbase-client')
@@ -153,7 +153,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client
    // compile group: 'org.apache.hbase', name: 'hbase-shaded-client', version: '1.3.6'
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.5.0'
+    implementation group: 'com.google.protobuf', name: 'protobuf-java', version: '2.5.0'
     // https://mvnrepository.com/artifact/org.apache.hbase.thirdparty/hbase-shaded-protobuf
 
 
@@ -177,78 +177,78 @@ dependencies {
 //    }
 
 
-    compile group: 'com.github.jsqlparser', name: 'jsqlparser', version: '3.1'
+    implementation group: 'com.github.jsqlparser', name: 'jsqlparser', version: '3.1'
 
     // https://mvnrepository.com/artifact/com.redislabs/spark-redis
-    compile group: 'com.redislabs', name: 'spark-redis_2.11', version: '2.4.2'
+    implementation group: 'com.redislabs', name: 'spark-redis_2.11', version: '2.4.2'
 
     // https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector
-    compile group: 'com.datastax.spark', name: 'spark-cassandra-connector_2.11', version: '2.4.3'
+    implementation group: 'com.datastax.spark', name: 'spark-cassandra-connector_2.11', version: '2.4.3'
 
-    //compile group: 'com.springml', name: 'spark-sftp_2.11', version: '1.1.4'
+    //implementation group: 'com.springml', name: 'spark-sftp_2.11', version: '1.1.4'
     // https://mvnrepository.com/artifact/com.springml/sftp.client
-    compile group: 'com.springml', name: 'sftp.client', version: '1.0.3'
+    implementation group: 'com.springml', name: 'sftp.client', version: '1.0.3'
 
 
-    compile group: 'org.apache.kudu', name: 'kudu-spark2_2.11', version: '1.11.1'
+    implementation group: 'org.apache.kudu', name: 'kudu-spark2_2.11', version: '1.11.1'
 
     // https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-flume
-    compile group: 'org.apache.spark', name: 'spark-streaming-flume_2.11', version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: 'spark-streaming-flume_2.11', version: "$sparkVersion"
 
     // https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-flume-sink
-    compile group: 'org.apache.spark', name: 'spark-streaming-flume-sink_2.11', version: "$sparkVersion"
+    implementation group: 'org.apache.spark', name: 'spark-streaming-flume-sink_2.11', version: "$sparkVersion"
 
     // https://mvnrepository.com/artifact/com.lucidworks.spark/spark-solr
-   // compile group: 'com.lucidworks.spark', name: 'spark-solr', version: '3.7.6'
+   // implementation group: 'com.lucidworks.spark', name: 'spark-solr', version: '3.7.6'
     
     //https://github.com/apache/hudi#building-apache-hudi-from-source
-    compile group: 'org.apache.hudi', name: 'hudi-spark-bundle_2.11', version: '0.5.3'
+    implementation group: 'org.apache.hudi', name: 'hudi-spark-bundle_2.11', version: '0.5.3'
 
-    compile group: 'org.apache.spark', name: 'spark-avro_2.11', version: '2.4.4'
+    implementation group: 'org.apache.spark', name: 'spark-avro_2.11', version: '2.4.4'
 
     // https://mvnrepository.com/artifact/com.github.housepower/clickhouse-native-jdbc
-    compile group: 'com.github.housepower', name: 'clickhouse-native-jdbc', version: '2.1-stable'
+    implementation group: 'com.github.housepower', name: 'clickhouse-native-jdbc', version: '2.1-stable'
 
     // https://mvnrepository.com/artifact/org.kie/kie-api
-    compile group: 'org.kie', name: 'kie-api', version: '7.40.0.Final'
-    // https://mvnrepository.com/artifact/org.drools/drools-compiler
-    compile (group: 'org.drools', name: 'drools-compiler', version: '7.40.0.Final'){
+    implementation group: 'org.kie', name: 'kie-api', version: '7.40.0.Final'
+    // https://mvnrepository.com/artifact/org.drools/drools-implementationr
+    implementation (group: 'org.drools', name: 'drools-compiler', version: '7.40.0.Final'){
         exclude (module: 'protobuf-java')
     }
     // https://mvnrepository.com/artifact/org.drools/drools-core
-    compile group: 'org.drools', name: 'drools-core', version: '7.40.0.Final'
+    implementation group: 'org.drools', name: 'drools-core', version: '7.40.0.Final'
 
-    compile group: 'com.github.shyiko', name: 'mysql-binlog-connector-java', version: '0.21.0'
+    implementation group: 'com.github.shyiko', name: 'mysql-binlog-connector-java', version: '0.21.0'
 
     // https://mvnrepository.com/artifact/com.pivotal/greenplum-jdbc
-    compile files('libs/greenplum-jdbc-5.1.4.jar')
-    compile files('libs/spark-greenplum-1.0-SNAPSHOT.jar')
+    implementation files('libs/greenplum-jdbc-5.1.4.jar')
+    implementation files('libs/spark-greenplum-1.0-SNAPSHOT.jar')
     
-    compile group: 'com.memsql', name: 'memsql-spark-connector_2.11', version: '3.0.4-spark-2.4.4'
+    implementation group: 'com.memsql', name: 'memsql-spark-connector_2.11', version: '3.0.4-spark-2.4.4'
 
     // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
-    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.6.2'
+    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.6.2'
 
     // https://mvnrepository.com/artifact/com.facebook.presto/presto-jdbc
-    compile group: 'com.facebook.presto', name: 'presto-jdbc', version: '0.240'
+    implementation group: 'com.facebook.presto', name: 'presto-jdbc', version: '0.240'
 
     // https://mvnrepository.com/artifact/com.amazon.redshift/redshift-jdbc42
-    compile files('libs/redshift-jdbc42-1.2.43.1067.jar')
+    implementation files('libs/redshift-jdbc42-1.2.43.1067.jar')
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.16'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.16'
 
     // https://mvnrepository.com/artifact/org.apache.kylin/kylin-jdbc
-    compile group: 'org.apache.kylin', name: 'kylin-jdbc', version: '3.0.2'
+    implementation group: 'org.apache.kylin', name: 'kylin-jdbc', version: '3.0.2'
 
-    compile files('libs/terajdbc4.jar')
-    compile files('libs/tdgssconfig.jar')
+    implementation files('libs/terajdbc4.jar')
+    implementation files('libs/tdgssconfig.jar')
 
-    compile files('libs/kingbasejdbc3.jar')
+    implementation files('libs/kingbasejdbc3.jar')
 
-    compile files('libs/gbase-connector-java-8.3.81.53-build52.8-bin.jar')
+    implementation files('libs/gbase-connector-java-8.3.81.53-build52.8-bin.jar')
 
-    compile files('libs/tispark-assembly-2.3.11.jar')
+    implementation files('libs/tispark-assembly-2.3.11.jar')
 
 }
 
@@ -317,14 +317,14 @@ jar {
         attributes 'Main-Class': 'com.zyc.SystemInit'
     }
 }
-processResources {
-    exclude { "**/*.*" }
-}
+//processResources {
+//    exclude { "**/*.*" }
+//}
 
 // 复制依赖jar至build/libs
 task copyJar(type: Copy) {
     // from configurations.runtime
-    from configurations.runtime
+    from configurations.runtimeOnly
     into('release/libs')
     exclude 'hadoop**.jar','spark-core*','spark-catalyst*','spark-tags*','spark-network*','spark-unsafe*',
             'spark-mllib*','spark-sql*'
@@ -332,7 +332,7 @@ task copyJar(type: Copy) {
 
 // 复制依赖jar至build/libs
 task copyJar2(type: Copy) {
-    // from configurations.runtime
+    // from configurations.runtimeOnly
     from ("build/libs")
     into('release/libs')
 }
