@@ -63,6 +63,7 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     //数据采集请求
     val param = getReqContent(request)
 
+    // kill任务请求
     if (uri.contains("/api/v1/kill")){
       val task_logs_id=param.getOrElse("task_logs_id", "001").toString
       val dispatch_task_id = param.getOrElse("job_id", "001").toString

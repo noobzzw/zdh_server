@@ -5,7 +5,7 @@ wrapper {
     gradleVersion = '4.10.2' //version required
 }
 
-def scalaVersion = '2.13.6'
+def scalaVersion = '2.11.12'
 def sparkVersion = "2.4.4"
 ext {
     baseScala = scalaVersion.substring(0, scalaVersion.lastIndexOf("."))

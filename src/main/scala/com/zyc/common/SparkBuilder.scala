@@ -7,8 +7,8 @@ object SparkBuilder{
   private var sparkSession:SparkSession=null;
   def initSparkSession(): Unit ={
     val sparkConf = new SparkConf()
-    val system = System.getProperty("os.name");
-    if(system.toLowerCase().startsWith("win")){
+    val system = System.getProperty("os.name").toLowerCase();
+    if(system.startsWith("win") || system.startsWith("mac")){
       sparkConf.setMaster("local[*]")
     }
     //sparkConf.setAppName("Spark Shenzhen SERVER")

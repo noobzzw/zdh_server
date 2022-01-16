@@ -34,6 +34,8 @@ object JsonSchemaBuilder {
  
   private def getStrcutType(fields: List[String]): StructType = {
     fields match {
+      // 增加判空逻辑
+      case Nil => StructType(Nil)
       case head :: Nil ⇒ StructType(StructField(head, StringType, DEFAULT_NULLABLE) :: Nil)
       case head :: tail ⇒ StructType(StructField(head, getStrcutType(tail), DEFAULT_NULLABLE) :: Nil)
     }
