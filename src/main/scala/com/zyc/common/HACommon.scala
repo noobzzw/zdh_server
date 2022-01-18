@@ -78,13 +78,13 @@ object HACommon {
       //etcd 请求创建Ha 标识,返回true 标识创建成功,
       val result = putEtcd(etcd_host,  ha_key+ha_preExist+current_host)
 
-      if (result == false) {
+      if (!result) {
         println("项目已经..开始检查远程服务器是否存活")
         retry = isRetry(etcd_host, ha_key, port, timeout)
       }
 
 
-      while (retry == false) {
+      while (!retry) {
         println("检查远程服务器存活")
         Thread.sleep(checkServiceTime)
         retry = isRetry(etcd_host, ha_key, port, timeout)

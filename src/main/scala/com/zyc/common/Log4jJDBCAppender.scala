@@ -15,14 +15,11 @@ class Log4jJDBCAppender extends JDBCAppender{
       println("日志服务器重连......")
       connection = null;
     }
-
     if (connection == null) {
       connection = DriverManager.getConnection(databaseURL, databaseUser, databasePassword);
     }
 
-    return connection;
-
-
+    connection;
   }
 
 }

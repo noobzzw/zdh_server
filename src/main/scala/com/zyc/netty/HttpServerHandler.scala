@@ -3,7 +3,6 @@ package com.zyc.netty
 import java.net.URLDecoder
 import java.util.Date
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
-
 import com.zyc.base.util.JsonUtil
 import com.zyc.common.{MariadbCommon, SparkBuilder}
 import com.zyc.zdh.DataSources
@@ -12,28 +11,29 @@ import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelIn
 import io.netty.handler.codec.http._
 import io.netty.util.CharsetUtil
 import org.apache.log4j.MDC
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 
+/**
+ * 处理Http请求的handler
+ */
 class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandler {
-  val logger = LoggerFactory.getLogger(this.getClass)
-
-
+  private val logger = LoggerFactory.getLogger(this.getClass)
+  private val spark = SparkBuilder.getSparkSession()
   //单线程线程池，同一时间只会有一个线程在运行,保证加载顺序
-  private val threadpool = new ThreadPoolExecutor(
+  private val Deadpool = new ThreadPoolExecutor(
     1, // core pool size
     1, // max pool size
     500, // keep alive time
-    TimeUnit.MILLISECONDS,
-    new LinkedBlockingQueue[Runnable]()
+    TimeUnit.MILLISECONDS, // unit of time
+    new LinkedBlockingQueue[Runnable]() // "链表组成的队列，最大为Integer.MAX_VALUE"
   )
 
   override def channelRead(ctx: ChannelHandlerContext, msg: scala.Any): Unit = {
-    println("接收到netty 消息:时间" + new Date(System.currentTimeMillis()))
-
+    logger.info("Spark(netty)端接受到http消息")
     val request = msg.asInstanceOf[FullHttpRequest]
     val keepAlive = HttpUtil.isKeepAlive(request)
-    val response = diapathcer(request)
+    val response = dispatcher(request)
     if (keepAlive) {
       response.headers().set(Connection, KeepAlive)
       ctx.writeAndFlush(response)
@@ -44,61 +44,50 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     ctx.writeAndFlush(defaultResponse(serverErr)).addListener(ChannelFutureListener.CLOSE)
-    //    logger.error(cause.getMessage)
-    //    logger.error("error:", cause)
+    logger.error(cause.getMessage)
+    logger.error("error:", cause)
   }
 
-  override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
-    ctx.flush
-  }
 
   /**
     * 分发请求
     *
-    * @param request
-    * @return
+    * @param request 后端发来的请求
+    * @return response
     */
-  def diapathcer(request: FullHttpRequest): HttpResponse = {
+  def dispatcher(request: FullHttpRequest): HttpResponse = {
     val uri = request.uri()
     //数据采集请求
     val param = getReqContent(request)
 
     // kill任务请求
-    if (uri.contains("/api/v1/kill")){
-      val task_logs_id=param.getOrElse("task_logs_id", "001").toString
-      val dispatch_task_id = param.getOrElse("job_id", "001").toString
-      MDC.put("job_id", dispatch_task_id)
-      MDC.put("task_logs_id",task_logs_id)
-      val r= kill(param)
-      MDC.remove("job_id")
-      MDC.remove("task_logs_id")
-      return r
+    if (uri.contains("/api/v1/kill")) {
+      killJobs(param)
     }
 
+    // 展示数据库表
     if (uri.contains("/api/v1/zdh/show_databases")) {
-      val spark = SparkBuilder.getSparkSession()
-      val result = DataWareHouseSources.show_databases(spark)
-      return defaultResponse(result)
+      showDataBases()
     } else if (uri.contains("/api/v1/zdh/show_tables")) {
-      val spark = SparkBuilder.getSparkSession()
       val databaseName = param.getOrElse("databaseName", "default").toString
-      val result = DataWareHouseSources.show_tables(spark, databaseName)
-      return defaultResponse(result)
+      showTables(databaseName)
     } else if (uri.contains("/api/v1/zdh/desc_table")) {
-      val spark = SparkBuilder.getSparkSession()
-      val table = param.getOrElse("table", "").toString
-      val result = DataWareHouseSources.desc_table(spark, table)
-      return defaultResponse(result)
+      val tableName = param.getOrElse("table", "").toString
+      descTable(tableName)
     }
 
     val dispatchOptions = param.getOrElse("tli", Map.empty[String, Any]).asInstanceOf[Map[String, Any]]
     val dispatch_task_id = dispatchOptions.getOrElse("job_id", "001").toString
     val task_logs_id=param.getOrElse("task_logs_id", "001").toString
-    val etl_date = JsonUtil.jsonToMap(dispatchOptions.getOrElse("params", "").toString).getOrElse("ETL_DATE", "").toString
+    // jsonToMap 无法处理""，增加判断逻辑
+    var etl_date: String = ""
+    if (dispatchOptions.contains("params")) {
+      etl_date = JsonUtil.jsonToMap(dispatchOptions.getOrElse("params", "").toString).getOrElse("ETL_DATE", "").toString
+    }
     try {
       MDC.put("job_id", dispatch_task_id)
       MDC.put("task_logs_id",task_logs_id)
-      logger.info(s"接收到请求uri:$uri")
+      logger.info(s"接收到请求uri: ${uri}")
       MariadbCommon.updateTaskStatus(task_logs_id, dispatch_task_id, "etl", etl_date, "22")
       logger.info(s"接收到请求uri:$uri,参数:${param.mkString(",").replaceAll("\"", "")}")
       if (uri.contains("/api/v1/zdh/more")) {
@@ -108,16 +97,11 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
       } else if(uri.contains("/api/v1/zdh/drools")){
         droolsEtl(param)
       }else if (uri.contains("/api/v1/zdh/show_databases")) {
-        val spark = SparkBuilder.getSparkSession()
-        val result = DataWareHouseSources.show_databases(spark)
-        defaultResponse(result)
+        showDataBases()
       } else if (uri.contains("/api/v1/zdh/show_tables")) {
-        val spark = SparkBuilder.getSparkSession()
         val databaseName = param.getOrElse("databaseName", "default").toString
-        val result = DataWareHouseSources.show_tables(spark, databaseName)
-        defaultResponse(result)
+        showTables(databaseName)
       } else if (uri.contains("/api/v1/zdh/desc_table")) {
-        val spark = SparkBuilder.getSparkSession()
         val table = param.getOrElse("table", "").toString
         val result = DataWareHouseSources.desc_table(spark, table)
         defaultResponse(result)
@@ -177,20 +161,49 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     }
   }
 
-  private def kill(param: Map[String, Any]): DefaultFullHttpResponse={
+  private def killJobs(param: Map[String,Any]): DefaultFullHttpResponse = {
     val task_logs_id = param.getOrElse("task_logs_id", "001").toString
-    val jobGroups=param.getOrElse("jobGroups",List.empty[String]).asInstanceOf[List[String]]
+    val dispatch_task_id = param.getOrElse("job_id", "001").toString
+    // mdc 为轻量的日志，这里将日志写入zdh_log这个表里
+    MDC.put("job_id", dispatch_task_id)
+    MDC.put("task_logs_id",task_logs_id)
+    val result = kill(param)
+    MDC.remove("job_id")
+    MDC.remove("task_logs_id")
+    result
+  }
 
-    val spark = SparkBuilder.getSparkSession()
-    logger.info(s"开始杀死任务:${jobGroups.mkString(",")}")
+  private def kill(param: Map[String, Any]): DefaultFullHttpResponse={
+//    val task_logs_id = param.getOrElse("task_logs_id", "001").toString
+    // 需要kill的任务集
+    val jobGroups = param.getOrElse("jobGroups",List.empty[String]).asInstanceOf[List[String]]
+    // 启动spark job
+    logger.info(s"开始杀死任务: ${jobGroups.mkString(",")}")
     jobGroups.foreach(jobGroup=>{
       spark.sparkContext.cancelJobGroup(jobGroup)
       logger.info(s"杀死任务:$jobGroup")
     })
     logger.info(s"完成杀死任务:${jobGroups.mkString(",")}")
-
+    // response ok
     defaultResponse(cmdOk)
   }
+
+  /**
+   * 展示数据库
+   * @return
+   */
+  private def showDataBases(): DefaultFullHttpResponse = {
+    defaultResponse(DataWareHouseSources.show_databases(spark))
+  }
+
+  private def showTables(databaseName:String): DefaultFullHttpResponse = {
+    defaultResponse(DataWareHouseSources.show_tables(spark, databaseName))
+  }
+
+  private def descTable(tableName:String): Unit = {
+    defaultResponse(DataWareHouseSources.desc_table(spark, tableName))
+  }
+
 
   private def moreEtl(param: Map[String, Any]): DefaultFullHttpResponse = {
 
@@ -227,10 +240,9 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     //清空语句
     val clear = etlMoreTaskInfo.getOrElse("data_sources_clear_output", "").toString
 
-    threadpool.execute(new Runnable() {
+    Deadpool.execute(new Runnable() {
       override def run() = {
         try {
-          val spark = SparkBuilder.getSparkSession()
           DataSources.DataHandlerMore(spark, task_logs_id, dispatchOptions, dsi_EtlInfo, etlMoreTaskInfo, outPut,
             outPutBaseOptions ++ outputOptions, outPutCols, clear)
         } catch {
@@ -292,10 +304,9 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     val clear = sqlTaskInfo.getOrElse("data_sources_clear_output", "").toString
 
 
-    threadpool.execute(new Runnable() {
+    Deadpool.execute(new Runnable() {
       override def run() = {
         try {
-          val spark = SparkBuilder.getSparkSession()
           DataSources.DataHandlerSql(spark, task_logs_id, dispatchOptions, sqlTaskInfo, inPut, inPutBaseOptions ++ inputOptions, outPut,
             outPutBaseOptions ++ outputOptions, null, clear)
         } catch {
@@ -360,10 +371,9 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     val clear = etlTaskInfo.getOrElse("data_sources_clear_output", "").toString
 
 
-    threadpool.execute(new Runnable() {
+    Deadpool.execute(new Runnable() {
       override def run() = {
         try {
-          val spark = SparkBuilder.getSparkSession()
           DataSources.DataHandler(spark, task_logs_id, dispatchOptions, etlTaskInfo, inPut, inPutBaseOptions ++ inputOptions, filter, inputCols, outPut,
             outPutBaseOptions ++ outputOptions, outPutCols, clear)
         } catch {
@@ -418,10 +428,9 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter with HttpBaseHandle
     //清空语句
     val clear = etlDroolsTaskInfo.getOrElse("data_sources_clear_output", "").toString
 
-    threadpool.execute(new Runnable() {
+    Deadpool.execute(new Runnable() {
       override def run() = {
         try {
-          val spark = SparkBuilder.getSparkSession()
           DataSources.DataHandlerDrools(spark, task_logs_id, dispatchOptions, dsi_EtlInfo, etlDroolsTaskInfo,etlMoreTaskInfo,sqlTaskInfo, outPut,
             outPutBaseOptions ++ outputOptions, outPutCols, clear)
         } catch {

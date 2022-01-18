@@ -8,7 +8,7 @@ case class zhd_logs(id:String,log_time:Timestamp,msg:String,level:String)
 
 object LogCommon {
 
-  val linkedBlockingDeque=new LinkedBlockingDeque[zhd_logs]()
+  val linkedBlockingDeque = new LinkedBlockingDeque[zhd_logs]()
 
 
 

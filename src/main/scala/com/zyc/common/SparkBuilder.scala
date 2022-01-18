@@ -4,14 +4,16 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 object SparkBuilder{
-  private var sparkSession:SparkSession=null;
+  private var sparkSession:SparkSession = _
   def initSparkSession(): Unit ={
     val sparkConf = new SparkConf()
     val system = System.getProperty("os.name").toLowerCase();
+    // 本地模式
     if(system.startsWith("win") || system.startsWith("mac")){
       sparkConf.setMaster("local[*]")
     }
-    //sparkConf.setAppName("Spark Shenzhen SERVER")
+    sparkConf.setAppName("Data Platform Spark SERVER")
+    // 序列化方式
     sparkConf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 //    sparkConf.set("hive.orc.splits.include.file.footer","true")
 //    sparkConf.set("hive.exec.orc.default.stripe.size","268435456")
@@ -19,6 +21,7 @@ object SparkBuilder{
 //    sparkConf.set("spark.sql.orc.impl","hive")
 //    sparkConf.set("spark.sql.hive.convertMetastoreOrc","false")
 //    sparkConf.set("spark.sql.orc.enableVectorizedReader","false")
+    // 开启cross join
     sparkConf.set("spark.sql.crossJoin.enabled","true")
     sparkConf.set("spark.extraListeners", classOf[ServerSparkListener].getName)
 //    sparkConf.set("spark.sql.shuffle.partitions","2000")
@@ -34,9 +37,13 @@ object SparkBuilder{
   }
 
 
+  /**
+   * 单例SparkSession
+   * @return
+   */
   def getSparkSession(): SparkSession ={
     synchronized{
-      if(sparkSession==null){
+      if(sparkSession == null){
         initSparkSession()
       }
     }
